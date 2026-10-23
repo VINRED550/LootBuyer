@@ -1,0 +1,59 @@
+# LootBuyer messages.
+# Format: MiniMessage — https://docs.advntr.dev/minimessage/format.html
+# An empty string "" disables a message.
+# <item> is the item name in the player's own client language.
+
+# Number separators in prices: 28,976.5
+format:
+  grouping-separator: ","
+  decimal-separator: "."
+
+prefix: "<gradient:#F5B83D:#E8783A><bold>Buyer</bold></gradient> <dark_gray>»</dark_gray> "
+
+usage: "<prefix><gray>Commands: <white>/buyer</white> — open, <white>/buyer sellall</white> — sell everything"
+usage-admin: "<prefix><gray>Admin: <white>/buyer reload</white>, <white>/buyer rotate</white>, <white>/buyer open \\<player></white>"
+no-permission: "<prefix><red>You don't have permission to do that."
+only-players: "<prefix><red>Only players can use this command."
+player-not-found: "<prefix><red>Player not found."
+reloaded: "<prefix><green>Configuration reloaded."
+rotated: "<prefix><green>Prices rotated manually."
+
+sold: "<prefix><gray>Sold <white><amount> × <item></white> for <gold>$<money></gold>"
+sell-all: "<prefix><gray>Sold <white><amount></white> items (<white><kinds></white> types) for <gold>$<money></gold>"
+sell-all-nothing: "<prefix><gray>You have nothing the buyer wants right now."
+nothing-to-sell: "<prefix><gray>You don't have any <white><item></white>."
+limit-reached: "<prefix><red>Limit for <item> reached.</red> <gray>Resets in <white><time></white>."
+not-buying: "<prefix><gray>The buyer isn't taking this item right now."
+no-economy: "<prefix><red>No economy plugin found. Please tell the staff."
+economy-error: "<prefix><red>Payment failed, your items were returned."
+rotation-announce: "<prefix><yellow>The buyer has new prices!</yellow> <gray>Check them out: <white>/buyer</white>"
+
+menu:
+  title: "<dark_gray>Buyer"
+  filler-name: " "
+  item-lore:
+    - "<gray>Price: <gold>$<price></gold> <trend>"
+    - "<gray>Per stack (<stack>): <gold>$<price_stack></gold>"
+    - ""
+    - "<gray>You can sell: <white><left></white><dark_gray> / <limit>"
+    - "<gray>You have: <white><have>"
+    - ""
+    - "<yellow>Left click</yellow> <gray>— sell 1"
+    - "<yellow>Right click</yellow> <gray>— sell a stack"
+    - "<yellow>Shift-click</yellow> <gray>— sell all"
+  trend-up: "<green>▲ <percent>%"
+  trend-down: "<red>▼ <percent>%"
+  trend-same: "<gray>="
+  info-name: "<yellow>Price rotation"
+  info-lore:
+    - "<gray>Next in: <white><time>"
+    - "<gray>Your multiplier: <white><multiplier>"
+  sell-all-name: "<green>Sell all"
+  sell-all-lore:
+    - "<gray>Sells everything in your inventory"
+    - "<gray>that the buyer currently wants."
+
+time:
+  hours: "<h>h <m>m"
+  minutes: "<m>m <s>s"
+  seconds: "<s>s"

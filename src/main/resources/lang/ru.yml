@@ -1,0 +1,59 @@
+# Тексты плагина LootBuyer.
+# Формат — MiniMessage: https://docs.advntr.dev/minimessage/format.html
+# Пустая строка "" отключает сообщение.
+# <item> — название предмета на языке клиента игрока.
+
+# Разделители в ценах: 28 976,5
+format:
+  grouping-separator: " "
+  decimal-separator: ","
+
+prefix: "<gradient:#F5B83D:#E8783A><bold>Скупщик</bold></gradient> <dark_gray>»</dark_gray> "
+
+usage: "<prefix><gray>Команды: <white>/buyer</white> — открыть, <white>/buyer sellall</white> — продать всё"
+usage-admin: "<prefix><gray>Админ: <white>/buyer reload</white>, <white>/buyer rotate</white>, <white>/buyer open \\<игрок></white>"
+no-permission: "<prefix><red>Недостаточно прав."
+only-players: "<prefix><red>Команда доступна только игрокам."
+player-not-found: "<prefix><red>Игрок не найден."
+reloaded: "<prefix><green>Конфиг перезагружен."
+rotated: "<prefix><green>Цены обновлены вручную."
+
+sold: "<prefix><gray>Продано <white><amount> × <item></white> за <gold><money> $</gold>"
+sell-all: "<prefix><gray>Продано <white><amount></white> шт. (<white><kinds></white> видов) за <gold><money> $</gold>"
+sell-all-nothing: "<prefix><gray>В инвентаре нет ничего, что скупщик сейчас берёт."
+nothing-to-sell: "<prefix><gray>У вас нет <white><item></white>."
+limit-reached: "<prefix><red>Лимит на <item> исчерпан.</red> <gray>Сбросится через <white><time></white>."
+not-buying: "<prefix><gray>Сейчас этот предмет не скупается."
+no-economy: "<prefix><red>Экономика не подключена. Сообщите администрации."
+economy-error: "<prefix><red>Не удалось зачислить деньги, предметы возвращены."
+rotation-announce: "<prefix><yellow>Скупщик обновил цены!</yellow> <gray>Смотрите: <white>/buyer</white>"
+
+menu:
+  title: "<dark_gray>Скупщик"
+  filler-name: " "
+  item-lore:
+    - "<gray>Цена: <gold><price> $</gold> <trend>"
+    - "<gray>За стак (<stack> шт.): <gold><price_stack> $</gold>"
+    - ""
+    - "<gray>Можно продать: <white><left></white><dark_gray> / <limit>"
+    - "<gray>У вас: <white><have> шт."
+    - ""
+    - "<yellow>ЛКМ</yellow> <gray>— продать 1 шт."
+    - "<yellow>ПКМ</yellow> <gray>— продать стак"
+    - "<yellow>Shift + клик</yellow> <gray>— продать всё"
+  trend-up: "<green>▲ <percent>%"
+  trend-down: "<red>▼ <percent>%"
+  trend-same: "<gray>="
+  info-name: "<yellow>Обновление цен"
+  info-lore:
+    - "<gray>Через: <white><time>"
+    - "<gray>Ваш множитель: <white><multiplier>"
+  sell-all-name: "<green>Продать всё"
+  sell-all-lore:
+    - "<gray>Продаёт всё из инвентаря,"
+    - "<gray>что скупщик сейчас берёт."
+
+time:
+  hours: "<h> ч <m> мин"
+  minutes: "<m> мин <s> сек"
+  seconds: "<s> сек"
