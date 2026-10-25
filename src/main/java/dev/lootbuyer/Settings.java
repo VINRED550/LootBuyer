@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-/** Снимок config.yml. Пересоздаётся при /buyer reload. */
+/** Snapshot of config.yml. Recreated on /buyer reload. */
 public final class Settings {
     public final long rotationMillis;
     public final boolean announceRotation;
@@ -21,6 +21,11 @@ public final class Settings {
     public final Map<String, Double> multipliers;
     public final String soundSell;
     public final String soundFail;
+
+    public final boolean historyEnabled;
+    public final int historyKeepDays;
+    public final int historyPageSize;
+    public final String historyDateFormat;
 
     public final int menuRows;
     public final Material filler;
@@ -35,10 +40,15 @@ public final class Settings {
         rotationMillis = Math.max(1, c.getLong("rotation-minutes", 60)) * 60_000L;
         announceRotation = c.getBoolean("announce-rotation", true);
         itemsPerRotation = Math.max(0, c.getInt("items-per-rotation", 0));
-        priceDecimals = Math.clamp(c.getInt("price-decimals", 1), 0, 4);
+        priceDecimals = clamp(c.getInt("price-decimals", 1), 0, 4);
         onlyPlainItems = c.getBoolean("only-plain-items", true);
         soundSell = c.getString("sounds.sell", "");
         soundFail = c.getString("sounds.fail", "");
+
+        historyEnabled = c.getBoolean("history.enabled", true);
+        historyKeepDays = Math.max(1, c.getInt("history.keep-days", 7));
+        historyPageSize = clamp(c.getInt("history.page-size", 10), 1, 50);
+        historyDateFormat = c.getString("history.date-format", "dd.MM HH:mm");
 
         Map<String, Double> mult = new LinkedHashMap<>();
         ConfigurationSection ms = c.getConfigurationSection("multipliers");
@@ -50,7 +60,7 @@ public final class Settings {
         }
         multipliers = Collections.unmodifiableMap(mult);
 
-        menuRows = Math.clamp(c.getInt("menu.rows", 6), 1, 6);
+        menuRows = clamp(c.getInt("menu.rows", 6), 1, 6);
         int size = menuRows * 9;
         filler = material(c.getString("menu.filler", "GRAY_STAINED_GLASS_PANE"), Material.GRAY_STAINED_GLASS_PANE, log);
         infoSlot = slot(c.getInt("menu.info-slot", 4), size);
@@ -60,7 +70,7 @@ public final class Settings {
         List<Integer> slots = new ArrayList<>();
         List<Integer> configured = c.getIntegerList("menu.item-slots");
         if (configured.isEmpty()) {
-            // Середина меню без рамки: ряды 1..rows-2, колонки 1..7
+            // Inner area without the border: rows 1..rows-2, columns 1..7
             for (int row = 1; row < menuRows - 1; row++) {
                 for (int col = 1; col < 8; col++) slots.add(row * 9 + col);
             }
@@ -68,18 +78,23 @@ public final class Settings {
         } else {
             slots.addAll(configured);
         }
-        slots.removeIf(s -> s < 0 || s >= size || s == infoSlot || s == sellAllSlot);
-        itemSlots = List.copyOf(slots);
+        List<Integer> valid = new ArrayList<>();
+        for (Integer s : slots) {
+            if (s != null && s >= 0 && s < size && s != infoSlot && s != sellAllSlot) valid.add(s);
+        }
+        itemSlots = Collections.unmodifiableList(valid);
 
         Map<String, BuyerItem> list = new LinkedHashMap<>();
+        List<String> unavailable = new ArrayList<>();
         ConfigurationSection is = c.getConfigurationSection("items");
         if (is != null) {
             for (String id : is.getKeys(false)) {
                 ConfigurationSection sec = is.getConfigurationSection(id);
                 if (sec == null) continue;
                 Material mat = Material.matchMaterial(sec.getString("material", id));
-                if (mat == null || !mat.isItem() || mat.isAir()) {
-                    log.warning("items." + id + ": unknown material '" + sec.getString("material", id) + "', skipped");
+                if (!Compat.isSellable(mat)) {
+                    // e.g. COPPER_INGOT on 1.16 — the item simply doesn't exist in that version
+                    unavailable.add(id);
                     continue;
                 }
                 double min, max;
@@ -95,7 +110,9 @@ public final class Settings {
                     min = max = sec.getDouble("price", -1);
                 }
                 if (min > max) {
-                    double t = min; min = max; max = t;
+                    double t = min;
+                    min = max;
+                    max = t;
                 }
                 if (min < 0) {
                     log.warning("items." + id + ": price is missing or negative, skipped");
@@ -106,13 +123,18 @@ public final class Settings {
         }
         items = Collections.unmodifiableMap(list);
 
-        if (items.size() > itemSlots.size()) {
-            int shown = itemsPerRotation > 0 ? Math.min(itemsPerRotation, items.size()) : items.size();
-            if (shown > itemSlots.size()) {
-                log.warning("There are more items (" + shown + ") than menu slots (" + itemSlots.size()
-                        + "). Extra items won't be shown: lower items-per-rotation or raise menu.rows.");
-            }
+        if (!unavailable.isEmpty()) {
+            log.info("Not available on Minecraft " + Compat.version() + ", skipped: " + String.join(", ", unavailable));
         }
+        int shown = itemsPerRotation > 0 ? Math.min(itemsPerRotation, items.size()) : items.size();
+        if (shown > itemSlots.size()) {
+            log.warning("There are more items (" + shown + ") than menu slots (" + itemSlots.size()
+                    + "). Extra items won't be shown: lower items-per-rotation or raise menu.rows.");
+        }
+    }
+
+    private static int clamp(int v, int min, int max) {
+        return Math.max(min, Math.min(max, v));
     }
 
     private static int slot(int slot, int size) {

@@ -11,7 +11,7 @@ format:
 prefix: "<gradient:#F5B83D:#E8783A><bold>Скупщик</bold></gradient> <dark_gray>»</dark_gray> "
 
 usage: "<prefix><gray>Команды: <white>/buyer</white> — открыть, <white>/buyer sellall</white> — продать всё"
-usage-admin: "<prefix><gray>Админ: <white>/buyer reload</white>, <white>/buyer rotate</white>, <white>/buyer open \\<игрок></white>"
+usage-admin: "<prefix><gray>Админ: <white>/buyer reload</white>, <white>/buyer rotate</white>, <white>/buyer open \\<игрок></white>, <white>/buyer history \\<игрок></white>"
 no-permission: "<prefix><red>Недостаточно прав."
 only-players: "<prefix><red>Команда доступна только игрокам."
 player-not-found: "<prefix><red>Игрок не найден."
@@ -27,6 +27,17 @@ not-buying: "<prefix><gray>Сейчас этот предмет не скупа�
 no-economy: "<prefix><red>Экономика не подключена. Сообщите администрации."
 economy-error: "<prefix><red>Не удалось зачислить деньги, предметы возвращены."
 rotation-announce: "<prefix><yellow>Скупщик обновил цены!</yellow> <gray>Смотрите: <white>/buyer</white>"
+
+history:
+  usage: "<prefix><gray>Использование: <white>/buyer history \\<игрок> [страница]"
+  disabled: "<prefix><red>История продаж выключена в config.yml."
+  unavailable: "<prefix><red>Хранилище истории недоступно на этом сервере, подробности в консоли."
+  loading: ""
+  empty: "<prefix><gray><white><player></white> ничего не продавал за последние <white><days></white> дн."
+  header: "<prefix><gray>Продажи <white><player></white> за <white><days></white> дн.: <white><amount></white> шт. на <gold><money> $</gold>"
+  line: " <dark_gray><date></dark_gray> <white><amount> × <item></white> <gray>за</gray> <gold><money> $</gold>"
+  footer: "<gray>Страница <white><page></white>/<white><pages></white>. Дальше: <white>/buyer history <player> <next></white>"
+  last-page: "<gray>Страница <white><page></white>/<white><pages></white>."
 
 menu:
   title: "<dark_gray>Скупщик"

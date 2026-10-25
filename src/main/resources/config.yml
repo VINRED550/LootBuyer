@@ -31,6 +31,17 @@ multipliers:
   vip: 1.1
   premium: 1.25
 
+# Sales history for admins: /buyer history <player> [page]  (permission lootbuyer.history)
+# История продаж для админов.
+history:
+  enabled: true
+  # How many days to keep records. Older ones are deleted automatically.
+  keep-days: 7
+  # Lines per page in /buyer history
+  page-size: 10
+  # https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html
+  date-format: "dd.MM HH:mm"
+
 # Sound keys from https://minecraft.wiki/w/Sounds.json ("" = no sound)
 sounds:
   sell: "entity.experience_orb.pickup"

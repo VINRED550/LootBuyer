@@ -11,7 +11,7 @@ format:
 prefix: "<gradient:#F5B83D:#E8783A><bold>Buyer</bold></gradient> <dark_gray>»</dark_gray> "
 
 usage: "<prefix><gray>Commands: <white>/buyer</white> — open, <white>/buyer sellall</white> — sell everything"
-usage-admin: "<prefix><gray>Admin: <white>/buyer reload</white>, <white>/buyer rotate</white>, <white>/buyer open \\<player></white>"
+usage-admin: "<prefix><gray>Admin: <white>/buyer reload</white>, <white>/buyer rotate</white>, <white>/buyer open \\<player></white>, <white>/buyer history \\<player></white>"
 no-permission: "<prefix><red>You don't have permission to do that."
 only-players: "<prefix><red>Only players can use this command."
 player-not-found: "<prefix><red>Player not found."
@@ -27,6 +27,17 @@ not-buying: "<prefix><gray>The buyer isn't taking this item right now."
 no-economy: "<prefix><red>No economy plugin found. Please tell the staff."
 economy-error: "<prefix><red>Payment failed, your items were returned."
 rotation-announce: "<prefix><yellow>The buyer has new prices!</yellow> <gray>Check them out: <white>/buyer</white>"
+
+history:
+  usage: "<prefix><gray>Usage: <white>/buyer history \\<player> [page]"
+  disabled: "<prefix><red>Sales history is turned off in config.yml."
+  unavailable: "<prefix><red>Sales history storage isn't available on this server, see the console."
+  loading: ""
+  empty: "<prefix><gray><white><player></white> hasn't sold anything in the last <white><days></white> days."
+  header: "<prefix><gray>Sales of <white><player></white> in the last <white><days></white> days: <white><amount></white> items for <gold>$<money></gold>"
+  line: " <dark_gray><date></dark_gray> <white><amount> × <item></white> <gray>for</gray> <gold>$<money></gold>"
+  footer: "<gray>Page <white><page></white>/<white><pages></white>. Next: <white>/buyer history <player> <next></white>"
+  last-page: "<gray>Page <white><page></white>/<white><pages></white>."
 
 menu:
   title: "<dark_gray>Buyer"

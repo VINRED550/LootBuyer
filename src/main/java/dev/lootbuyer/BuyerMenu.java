@@ -1,6 +1,5 @@
 package dev.lootbuyer;
 
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -10,13 +9,13 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Меню скупщика для одного игрока. */
+/** The buyer menu of one player. */
 public final class BuyerMenu implements InventoryHolder {
     private final LootBuyerPlugin plugin;
     private final Player viewer;
@@ -26,16 +25,18 @@ public final class BuyerMenu implements InventoryHolder {
     private BuyerMenu(LootBuyerPlugin plugin, Player viewer) {
         this.plugin = plugin;
         this.viewer = viewer;
-        this.inventory = Bukkit.createInventory(this, plugin.settings().menuRows * 9, plugin.messages().one("menu.title"));
+        this.inventory = Bukkit.createInventory(this, plugin.settings().menuRows * 9, plugin.messages().legacy("menu.title"));
         render();
     }
 
     public static void open(LootBuyerPlugin plugin, Player player) {
-        player.openInventory(new BuyerMenu(plugin, player).getInventory());
+        BuyerMenu menu = new BuyerMenu(plugin, player);
+        player.openInventory(menu.getInventory());
+        plugin.trackMenu(menu);
     }
 
     @Override
-    public @NotNull Inventory getInventory() {
+    public Inventory getInventory() {
         return inventory;
     }
 
@@ -43,12 +44,17 @@ public final class BuyerMenu implements InventoryHolder {
         return viewer;
     }
 
+    /** Whether the player still has this menu open. */
+    public boolean isOpen() {
+        return viewer.isOnline() && inventory.getViewers().contains(viewer);
+    }
+
     public void render() {
         Settings s = plugin.settings();
         inventory.clear();
         itemsBySlot.clear();
 
-        if (!s.filler.isAir()) {
+        if (s.filler != Material.AIR) {
             ItemStack filler = button(s.filler, "menu.filler-name", null);
             for (int i = 0; i < inventory.getSize(); i++) inventory.setItem(i, filler);
         }
@@ -66,7 +72,7 @@ public final class BuyerMenu implements InventoryHolder {
         renderInfo();
     }
 
-    /** Обновляет только часы с таймером — вызывается каждую секунду. */
+    /** Updates only the clock with the timer — called every second. */
     public void renderInfo() {
         Settings s = plugin.settings();
         if (s.infoSlot < 0) return;
@@ -87,13 +93,21 @@ public final class BuyerMenu implements InventoryHolder {
         BuyerItem item = id == null ? null : s.items.get(id);
         if (item == null) return;
 
-        int amount = switch (click) {
-            case LEFT -> 1;
-            case RIGHT -> item.material().getMaxStackSize();
-            case SHIFT_LEFT, SHIFT_RIGHT -> Integer.MAX_VALUE;
-            default -> 0;
-        };
-        if (amount == 0) return;
+        int amount;
+        switch (click) {
+            case LEFT:
+                amount = 1;
+                break;
+            case RIGHT:
+                amount = item.material().getMaxStackSize();
+                break;
+            case SHIFT_LEFT:
+            case SHIFT_RIGHT:
+                amount = Integer.MAX_VALUE;
+                break;
+            default:
+                return;
+        }
         plugin.sells().sell(player, item, amount);
         render();
     }
@@ -109,32 +123,39 @@ public final class BuyerMenu implements InventoryHolder {
                 Placeholder.unparsed("price", m.money(price)),
                 Placeholder.unparsed("price_stack", m.money(price * stack)),
                 Placeholder.unparsed("stack", Integer.toString(stack)),
-                Placeholder.component("trend", trend(item)),
+                Placeholder.parsed("trend", trend(item)),
                 Placeholder.unparsed("left", left == Integer.MAX_VALUE ? "∞" : Integer.toString(left)),
                 Placeholder.unparsed("limit", item.limit() <= 0 ? "∞" : Integer.toString(item.limit())),
                 Placeholder.unparsed("have", Integer.toString(plugin.sells().count(viewer, item.material()))));
 
         ItemStack icon = new ItemStack(item.material());
-        icon.editMeta(meta -> meta.lore(m.lore("menu.item-lore", tags)));
+        ItemMeta meta = icon.getItemMeta();
+        if (meta != null) {
+            meta.setLore(m.lore("menu.item-lore", tags));
+            icon.setItemMeta(meta);
+        }
         return icon;
     }
 
-    private Component trend(BuyerItem item) {
+    /** MiniMessage text of the price change, e.g. "<green>▲ 12%". Empty before the first rotation. */
+    private String trend(BuyerItem item) {
         Double prev = plugin.prices().previousPrice(item.id());
         double cur = plugin.prices().price(item.id());
-        if (prev == null || prev <= 0) return Component.empty();
+        if (prev == null || prev <= 0) return "";
         double percent = (cur - prev) / prev * 100;
         String key = Math.abs(percent) < 0.5 ? "menu.trend-same" : percent > 0 ? "menu.trend-up" : "menu.trend-down";
-        return plugin.messages().one(key, Placeholder.unparsed("percent", Long.toString(Math.round(Math.abs(percent)))));
+        return plugin.messages().raw(key).replace("<percent>", Long.toString(Math.round(Math.abs(percent))));
     }
 
     private ItemStack button(Material material, String nameKey, String loreKey, TagResolver... tags) {
         Messages m = plugin.messages();
         ItemStack stack = new ItemStack(material);
-        stack.editMeta(meta -> {
-            meta.displayName(Messages.noItalic(m.one(nameKey, tags)));
-            if (loreKey != null) meta.lore(m.lore(loreKey, tags));
-        });
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(m.legacy(nameKey, tags));
+            if (loreKey != null) meta.setLore(m.lore(loreKey, tags));
+            stack.setItemMeta(meta);
+        }
         return stack;
     }
 }

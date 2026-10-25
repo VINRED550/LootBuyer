@@ -3,14 +3,13 @@ package dev.lootbuyer;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 /**
- * %lootbuyer_next%            — время до смены цен
- * %lootbuyer_next_seconds%    — то же в секундах
- * %lootbuyer_price_<id>%      — текущая цена за 1 шт.
- * %lootbuyer_active_<id>%     — скупается ли предмет сейчас (true/false)
- * %lootbuyer_left_<id>%       — сколько ещё может продать игрок
+ * %lootbuyer_next%            — time until prices rotate
+ * %lootbuyer_next_seconds%    — same, in seconds
+ * %lootbuyer_price_<id>%      — current price per item
+ * %lootbuyer_active_<id>%     — whether the item is bought right now (true/false)
+ * %lootbuyer_left_<id>%       — how many more the player may sell
  */
 public final class LootBuyerExpansion extends PlaceholderExpansion {
     private final LootBuyerPlugin plugin;
@@ -20,18 +19,19 @@ public final class LootBuyerExpansion extends PlaceholderExpansion {
     }
 
     @Override
-    public @NotNull String getIdentifier() {
+    public String getIdentifier() {
         return "lootbuyer";
     }
 
     @Override
-    public @NotNull String getAuthor() {
-        return "LootBuyer";
+    public String getAuthor() {
+        return "VINREDS";
     }
 
     @Override
-    public @NotNull String getVersion() {
-        return plugin.getPluginMeta().getVersion();
+    @SuppressWarnings("deprecation")
+    public String getVersion() {
+        return plugin.getDescription().getVersion();
     }
 
     @Override
@@ -40,7 +40,7 @@ public final class LootBuyerExpansion extends PlaceholderExpansion {
     }
 
     @Override
-    public String onRequest(OfflinePlayer player, @NotNull String params) {
+    public String onRequest(OfflinePlayer player, String params) {
         PriceManager prices = plugin.prices();
         Messages m = plugin.messages();
 

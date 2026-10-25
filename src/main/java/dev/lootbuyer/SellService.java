@@ -9,11 +9,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-/** Продажа предметов: проверка лимитов, списание из инвентаря и зачисление денег через Vault. */
+/** Selling: limit checks, taking items from the inventory and paying through Vault. */
 public final class SellService {
     public enum Status { OK, NOT_BUYING, NO_ECONOMY, NOTHING, LIMIT, ECONOMY_ERROR }
 
-    public record Result(Status status, int amount, double money) {
+    public static final class Result {
+        final Status status;
+        final int amount;
+        final double money;
+
+        Result(Status status, int amount, double money) {
+            this.status = status;
+            this.amount = amount;
+            this.money = money;
+        }
+
         static Result of(Status status) {
             return new Result(status, 0, 0);
         }
@@ -25,42 +35,54 @@ public final class SellService {
         this.plugin = plugin;
     }
 
-    /** Продать до {@code wanted} штук предмета и сообщить игроку результат. */
+    /** Sell up to {@code wanted} of an item and tell the player how it went. */
     public void sell(Player player, BuyerItem item, int wanted) {
         Result r = trySell(player, item, wanted);
         Messages m = plugin.messages();
         Component name = itemName(item.material());
-        switch (r.status()) {
-            case OK -> m.send(player, "sold",
-                    Placeholder.unparsed("amount", Integer.toString(r.amount())),
-                    Placeholder.component("item", name),
-                    Placeholder.unparsed("money", m.money(r.money())));
-            case NOT_BUYING -> m.send(player, "not-buying");
-            case NO_ECONOMY -> m.send(player, "no-economy");
-            case NOTHING -> m.send(player, "nothing-to-sell", Placeholder.component("item", name));
-            case LIMIT -> m.send(player, "limit-reached",
-                    Placeholder.component("item", name),
-                    Placeholder.unparsed("time", m.time(plugin.prices().millisLeft())));
-            case ECONOMY_ERROR -> m.send(player, "economy-error");
+        switch (r.status) {
+            case OK:
+                m.send(player, "sold",
+                        Placeholder.unparsed("amount", Integer.toString(r.amount)),
+                        Placeholder.component("item", name),
+                        Placeholder.unparsed("money", m.money(r.money)));
+                break;
+            case NOT_BUYING:
+                m.send(player, "not-buying");
+                break;
+            case NO_ECONOMY:
+                m.send(player, "no-economy");
+                break;
+            case NOTHING:
+                m.send(player, "nothing-to-sell", Placeholder.component("item", name));
+                break;
+            case LIMIT:
+                m.send(player, "limit-reached",
+                        Placeholder.component("item", name),
+                        Placeholder.unparsed("time", m.time(plugin.prices().millisLeft())));
+                break;
+            case ECONOMY_ERROR:
+                m.send(player, "economy-error");
+                break;
         }
-        playSound(player, r.status() == Status.OK);
+        playSound(player, r.status == Status.OK);
     }
 
-    /** Продать всё, что скупщик сейчас берёт. */
+    /** Sell everything the buyer currently takes. */
     public void sellAll(Player player) {
         Messages m = plugin.messages();
         int amount = 0, kinds = 0;
         double money = 0;
         for (BuyerItem item : plugin.prices().activeItems()) {
             Result r = trySell(player, item, Integer.MAX_VALUE);
-            if (r.status() == Status.NO_ECONOMY) {
+            if (r.status == Status.NO_ECONOMY) {
                 m.send(player, "no-economy");
                 playSound(player, false);
                 return;
             }
-            if (r.status() == Status.OK) {
-                amount += r.amount();
-                money += r.money();
+            if (r.status == Status.OK) {
+                amount += r.amount;
+                money += r.money;
                 kinds++;
             }
         }
@@ -98,10 +120,11 @@ public final class SellService {
             return Result.of(Status.ECONOMY_ERROR);
         }
         prices.addSold(player.getUniqueId(), item.id(), amount);
+        plugin.history().record(player, item, amount, money);
         return new Result(Status.OK, amount, money);
     }
 
-    /** Сколько подходящих предметов в основном инвентаре (броня и вторая рука не считаются). */
+    /** Matching items in the main inventory (armor and off-hand are never counted). */
     public int count(Player player, Material material) {
         int n = 0;
         for (ItemStack it : player.getInventory().getStorageContents()) {
@@ -130,18 +153,24 @@ public final class SellService {
     }
 
     private void giveBack(Player player, Material material, int amount) {
-        player.getInventory().addItem(new ItemStack(material, amount)).values()
-                .forEach(left -> player.getWorld().dropItemNaturally(player.getLocation(), left));
+        for (ItemStack left : player.getInventory().addItem(new ItemStack(material, amount)).values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), left);
+        }
     }
 
     private void playSound(Player player, boolean success) {
         String sound = success ? plugin.settings().soundSell : plugin.settings().soundFail;
-        if (sound != null && !sound.isEmpty()) player.playSound(player.getLocation(), sound, 0.7f, 1.0f);
+        if (sound == null || sound.isEmpty()) return;
+        try {
+            player.playSound(player.getLocation(), sound, 0.7f, 1.0f);
+        } catch (RuntimeException ignored) {
+            // invalid sound key in config
+        }
     }
 
-    /** Название предмета, которое клиент покажет на своём языке. */
-    @SuppressWarnings("deprecation")
+    /** Item name the client shows in its own language; English name if the server can't tell the key. */
     public static Component itemName(Material material) {
-        return Component.translatable(material.translationKey());
+        String key = Compat.translationKey(material);
+        return key != null ? Component.translatable(key) : Component.text(Compat.prettyName(material));
     }
 }

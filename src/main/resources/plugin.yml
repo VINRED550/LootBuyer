@@ -1,7 +1,7 @@
 name: LootBuyer
 version: '${version}'
 main: dev.lootbuyer.LootBuyerPlugin
-api-version: '1.21'
+api-version: '1.16'
 description: Resource buyer GUI with rotating prices, limits and rank multipliers
 depend: [Vault]
 softdepend: [PlaceholderAPI, Essentials, CMI]
@@ -10,18 +10,21 @@ commands:
   lootbuyer:
     description: Open the buyer menu
     aliases: [buyer, skupka, skup]
-    usage: /buyer [sellall|reload|rotate|open <player>]
+    usage: /buyer [sellall|reload|rotate|open <player>|history <player> [page]]
 
 permissions:
   lootbuyer.use:
-    description: Открывать меню скупщика
+    description: Open the buyer menu
     default: true
   lootbuyer.sellall:
-    description: Команда /buyer sellall
+    description: /buyer sellall
     default: true
   lootbuyer.bypasslimit:
-    description: Продавать без лимитов
+    description: Sell without limits
     default: false
   lootbuyer.admin:
     description: reload, rotate, open
+    default: op
+  lootbuyer.history:
+    description: View players' sales history
     default: op
